@@ -49,11 +49,17 @@ export default function Notifications() {
   >(GET_NOTIFICATOINS, {
     variables: {
       input: {
-        session_id: "djfjdsd848",
-        device_id: "dnbjkfkdbfkd3",
+        session_id: "St6Sj74PnmsC^hXS2UPR",
+        device_id: "malta_64",
       },
     },
   });
+
+  const test = useQuery(gql`{
+    test {
+      id
+    }
+  }`)
   useEffect(() => {
     if (getAllNotifications.data) {
       if (getAllNotifications.data?.getNotificationByID?.length > 0) {
@@ -64,6 +70,10 @@ export default function Notifications() {
       console.log("getAllNotifications.data : ", getAllNotifications.data);
     }
   }, [getAllNotifications.data]);
+
+  useEffect(() => {
+    console.log("test : " , test.data)
+  },[test.data])
 
   // function clickNotification() {
   //     setSelectedNotification()
