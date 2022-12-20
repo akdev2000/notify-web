@@ -7,9 +7,9 @@ export function setDeviceId(deviceId: string) {
 }
 
 export function getSessionId() {
-  return localStorage.getItem("sessionId");
+  return localStorage.getItem("sessionId") || "";
 }
 
 export function getDeviceId() {
-  return localStorage.getItem("deviceId");
+  return localStorage.getItem("deviceId") || "";
 }

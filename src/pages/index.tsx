@@ -22,23 +22,27 @@ const SESSION_LOGGEDIN_LISTENER = gql`
   }
 `;
 export default function Index() {
-  const sessionLoggedInListener = useSubscription(SESSION_LOGGEDIN_LISTENER);
+  const sessionLoggedInListener = useSubscription(SESSION_LOGGEDIN_LISTENER,{
+    onData: (data) => {
+      console.log("Subscription Data : " , data)
+    }
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (sessionLoggedInListener?.data) {
+    if (sessionLoggedInListener?.data?.sessionLoggedIn) {
       console.log(
         "sessionLoggedInListener?.data :  ",
         sessionLoggedInListener?.data
       );
       if (
-        sessionLoggedInListener?.data?.session_id &&
-        sessionLoggedInListener?.data?.device_id
+        sessionLoggedInListener?.data?.sessionLoggedIn?.session_id &&
+        sessionLoggedInListener?.data?.sessionLoggedIn?.device_id
       ) {
-        toast.error("Connected Successfylly");
+        toast.success("Connected Successfylly");
         navigate("/notification");
-        setSessionId(sessionLoggedInListener?.data?.session_id);
-        setDeviceId(sessionLoggedInListener?.data?.device_id);
+        setSessionId(sessionLoggedInListener?.data?.sessionLoggedIn?.session_id);
+        setDeviceId(sessionLoggedInListener?.data?.sessionLoggedIn?.device_id);
       } else {
         toast.error("Cannot connect, Please try again");
       }
@@ -65,6 +69,7 @@ export default function Index() {
       >
         {/* <NotificationList title={"Test"} description={"Testing description"} /> */}
         <QRCode value={generateRandomString(20)} />
+        {/* <button>test</button> */}
       </div>
     </Root>
   );

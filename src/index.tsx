@@ -9,10 +9,12 @@ import {
   HttpLink,
   InMemoryCache,
   from,
+  split,
 } from "@apollo/client";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { createClient } from "graphql-ws";
 import { onError } from "apollo-link-error";
+import { getMainDefinition } from "@apollo/client/utilities";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -25,7 +27,7 @@ const wsLink = new GraphQLWsLink(
 );
 
 const httpLink = new HttpLink({
-  uri: "http://localhost:8000/graphql",
+  uri: "http://192.168.43.152:8000/graphql",
 });
 
 const errorLink: any = onError(
@@ -42,9 +44,21 @@ const errorLink: any = onError(
   }
 );
 
+const splitLink = split(
+  ({ query }) => {
+    const definition = getMainDefinition(query);
+    return (
+      definition.kind === "OperationDefinition" &&
+      definition.operation === "subscription"
+    );
+  },
+  wsLink,
+  httpLink
+);
+
 const client = new ApolloClient({
   cache: new InMemoryCache(),
-  link: from([httpLink, wsLink, errorLink]),
+  link: from([splitLink, errorLink]),
 });
 root.render(
   <React.StrictMode>

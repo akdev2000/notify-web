@@ -3,6 +3,7 @@ import { Grid } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import NotificationContent from "../components/NotificationContent";
 import { NotificationList } from "../components/NotificationList";
+import { getSessionId, getDeviceId } from "../utils/helpers";
 
 const GET_NOTIFICATOINS = gql`
   query getNotificationByID($input: NotificationInputType!) {
@@ -36,8 +37,8 @@ export type OriginalNotificationType = {
 };
 type NotificationInputType = {
   input: {
-    device_id: String;
-    session_id: String;
+    device_id: string;
+    session_id: string;
   };
 };
 
@@ -49,17 +50,19 @@ export default function Notifications() {
   >(GET_NOTIFICATOINS, {
     variables: {
       input: {
-        session_id: "St6Sj74PnmsC^hXS2UPR",
-        device_id: "malta_64",
+        session_id: getSessionId(),
+        device_id: getDeviceId(),
       },
     },
   });
 
-  const test = useQuery(gql`{
-    test {
-      id
+  const test = useQuery(gql`
+    {
+      test {
+        id
+      }
     }
-  }`)
+  `);
   useEffect(() => {
     if (getAllNotifications.data) {
       if (getAllNotifications.data?.getNotificationByID?.length > 0) {
@@ -72,8 +75,8 @@ export default function Notifications() {
   }, [getAllNotifications.data]);
 
   useEffect(() => {
-    console.log("test : " , test.data)
-  },[test.data])
+    console.log("test : ", test.data);
+  }, [test.data]);
 
   // function clickNotification() {
   //     setSelectedNotification()
@@ -118,7 +121,12 @@ export default function Notifications() {
         })}
       </Grid>
       <Grid alignItems={"center"} item xs={9}>
-        <NotificationContent notification={{...selectedNotification,createdAt:new Date(selectedNotification?.createdAt)}} />
+        <NotificationContent
+          notification={{
+            ...selectedNotification,
+            createdAt: new Date(selectedNotification?.createdAt),
+          }}
+        />
       </Grid>
     </Grid>
   );
