@@ -1,9 +1,10 @@
-import { gql, useQuery } from "@apollo/client";
+import { gql, useQuery, useSubscription } from "@apollo/client";
 import { Grid } from "@mui/material";
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import NotificationContent from "../components/NotificationContent";
 import { NotificationList } from "../components/NotificationList";
-import { getSessionId, getDeviceId } from "../utils/helpers";
+import { getSessionId, getDeviceId, clearLocalStorage } from "../utils/helpers";
 
 const GET_NOTIFICATOINS = gql`
   query getNotificationByID($input: NotificationInputType!) {
@@ -16,6 +17,15 @@ const GET_NOTIFICATOINS = gql`
       notificationData
       notificationReceivedTime
       createdAt
+    }
+  }
+`;
+
+const SESSION_LOG_OUT_LISTENER = gql`
+  subscription logoutListener {
+    logoutListener {
+      device_id
+      session_id
     }
   }
 `;
@@ -44,6 +54,7 @@ type NotificationInputType = {
 
 export default function Notifications() {
   const [selectedNotification, setSelectedNotification] = useState<any>();
+  const sessionLogoutListener = useSubscription(SESSION_LOG_OUT_LISTENER);
   const getAllNotifications = useQuery<
     NotificationOutputType,
     NotificationInputType
@@ -55,6 +66,7 @@ export default function Notifications() {
       },
     },
   });
+  const navigate = useNavigate();
 
   const test = useQuery(gql`
     {
@@ -73,6 +85,23 @@ export default function Notifications() {
       console.log("getAllNotifications.data : ", getAllNotifications.data);
     }
   }, [getAllNotifications.data]);
+
+  useEffect(() => {
+    console.log("sessionLogoutListener?.data" , sessionLogoutListener?.data)
+    if (sessionLogoutListener?.data) {
+      if (sessionLogoutListener?.data?.logoutListener) {
+        const { session_id, device_id } =
+          sessionLogoutListener?.data?.logoutListener;
+        const s_id = getSessionId();
+        const d_id = getDeviceId();
+
+        if (session_id.includes(s_id) && d_id == device_id) {
+          clearLocalStorage();
+          navigate("/");
+        }
+      }
+    }
+  }, [sessionLogoutListener?.data]);
 
   useEffect(() => {
     console.log("test : ", test.data);

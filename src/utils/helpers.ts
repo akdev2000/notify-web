@@ -13,3 +13,8 @@ export function getSessionId() {
 export function getDeviceId() {
   return localStorage.getItem("deviceId") || "";
 }
+
+
+export function clearLocalStorage() {
+  localStorage.clear();
+}

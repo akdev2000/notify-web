@@ -21,6 +21,10 @@ const SESSION_LOGGEDIN_LISTENER = gql`
     }
   }
 `;
+
+const generatedSessionId = generateRandomString(20);
+
+
 export default function Index() {
   const sessionLoggedInListener = useSubscription(SESSION_LOGGEDIN_LISTENER,{
     onData: (data) => {
@@ -36,7 +40,7 @@ export default function Index() {
         sessionLoggedInListener?.data
       );
       if (
-        sessionLoggedInListener?.data?.sessionLoggedIn?.session_id &&
+        sessionLoggedInListener?.data?.sessionLoggedIn?.session_id == generatedSessionId &&
         sessionLoggedInListener?.data?.sessionLoggedIn?.device_id
       ) {
         toast.success("Connected Successfylly");
@@ -53,7 +57,6 @@ export default function Index() {
     const sessionId = getSessionId();
     const deviceId = getDeviceId();
     if (sessionId && deviceId) {
-      toast.error("Cannot connect, Please try again");
       navigate("/notification");
     }
   }, []);
@@ -68,7 +71,7 @@ export default function Index() {
         }}
       >
         {/* <NotificationList title={"Test"} description={"Testing description"} /> */}
-        <QRCode value={generateRandomString(20)} />
+        <QRCode value={generatedSessionId} />
         {/* <button>test</button> */}
       </div>
     </Root>
