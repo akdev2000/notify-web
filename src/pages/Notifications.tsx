@@ -1,9 +1,10 @@
-import { gql, useQuery, useSubscription } from "@apollo/client";
-import { Grid } from "@mui/material";
+import { gql, useMutation, useQuery, useSubscription } from "@apollo/client";
+import { Button, Grid, Paper, Typography } from "@mui/material";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import NotificationContent from "../components/NotificationContent";
 import { NotificationList } from "../components/NotificationList";
+import { SESSION_EXPIRED } from "../helpers/constants";
 import { getSessionId, getDeviceId, clearLocalStorage } from "../utils/helpers";
 
 const GET_NOTIFICATOINS = gql`
@@ -21,11 +22,31 @@ const GET_NOTIFICATOINS = gql`
   }
 `;
 
+const LOGOUT = gql`
+  mutation logoutSession($input: NotificationInputType!) {
+    logoutSession(input: $input)
+  }
+`;
+
 const SESSION_LOG_OUT_LISTENER = gql`
   subscription logoutListener {
     logoutListener {
       device_id
       session_id
+    }
+  }
+`;
+
+const NOTIFICATION_RECEIVED_LISTENER = gql`
+  subscription receivedNotification {
+    receivedNotification {
+      device_id
+      device_name
+      id
+      Notification {
+        id
+        mainTitle
+      }
     }
   }
 `;
@@ -55,6 +76,7 @@ type NotificationInputType = {
 export default function Notifications() {
   const [selectedNotification, setSelectedNotification] = useState<any>();
   const sessionLogoutListener = useSubscription(SESSION_LOG_OUT_LISTENER);
+  const [logoutDevice, logoutDeviceResponse] = useMutation(LOGOUT);
   const getAllNotifications = useQuery<
     NotificationOutputType,
     NotificationInputType
@@ -66,6 +88,7 @@ export default function Notifications() {
       },
     },
   });
+  const notificationListener = useSubscription(NOTIFICATION_RECEIVED_LISTENER);
   const navigate = useNavigate();
 
   const test = useQuery(gql`
@@ -87,7 +110,16 @@ export default function Notifications() {
   }, [getAllNotifications.data]);
 
   useEffect(() => {
-    console.log("sessionLogoutListener?.data" , sessionLogoutListener?.data)
+    if (getAllNotifications.error) {
+      if (getAllNotifications.error?.message == SESSION_EXPIRED) {
+        clearLocalStorage();
+        navigate("/");
+      }
+    }
+  }, [getAllNotifications.error]);
+
+  useEffect(() => {
+    console.log("sessionLogoutListener?.data", sessionLogoutListener?.data);
     if (sessionLogoutListener?.data) {
       if (sessionLogoutListener?.data?.logoutListener) {
         const { session_id, device_id } =
@@ -104,8 +136,18 @@ export default function Notifications() {
   }, [sessionLogoutListener?.data]);
 
   useEffect(() => {
-    console.log("test : ", test.data);
-  }, [test.data]);
+    if (logoutDeviceResponse?.data) {
+      console.log("logoutDeviceResponse?.data : ", logoutDeviceResponse?.data);
+      clearLocalStorage();
+      navigate("/");
+    }
+  }, [logoutDeviceResponse?.data]);
+
+  useEffect(() => {
+    if (notificationListener?.data) {
+      getAllNotifications.refetch()
+    }
+  }, [notificationListener?.data]);
 
   // function clickNotification() {
   //     setSelectedNotification()
@@ -130,10 +172,60 @@ export default function Notifications() {
           justifyContent: "flex-start",
           height: window.innerHeight,
           overflow: "scroll",
+          overflowX: "hidden",
         }}
         item
         xs={3}
       >
+        <Paper
+          variant="outlined"
+          elevation={3}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            padding: 2,
+            cursor: "pointer",
+            width: "100%",
+            ml: 2,
+            justifyContent: "space-between",
+            position: "sticky",
+            bottom: 0,
+            height: 100,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <img
+              src="notify.png"
+              style={{ width: 50, height: 50, marginRight: 15 }}
+            />
+            <Typography variant="h5">Notify Me</Typography>
+          </div>
+          <div>
+            <Button
+              sx={{ mr: 2 }}
+              color="success"
+              variant="contained"
+              onClick={async () => {
+                await logoutDevice({
+                  variables: {
+                    input: {
+                      device_id: getDeviceId(),
+                      session_id: [getSessionId()],
+                    },
+                  },
+                });
+              }}
+            >
+              Logout
+            </Button>
+          </div>
+        </Paper>
         {getAllNotifications?.data?.getNotificationByID?.map((notification) => {
           return (
             <NotificationList
@@ -145,6 +237,7 @@ export default function Notifications() {
                 console.log("Notificatiom: ", notification);
                 setSelectedNotification(notification);
               }}
+              createdAt={notification.createdAt}
             />
           );
         })}

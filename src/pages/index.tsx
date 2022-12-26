@@ -22,17 +22,28 @@ const SESSION_LOGGEDIN_LISTENER = gql`
   }
 `;
 
+const UPDATE_SESSION_INFO = gql`
+  mutation update_session_info($input: UpdateSessionInfoInputProps!) {
+    update_session_info(input: $input) {
+      id
+      session_id
+      browser_name
+    }
+  }
+`;
+
 const generatedSessionId = generateRandomString(20);
 
-
 export default function Index() {
-  const sessionLoggedInListener = useSubscription(SESSION_LOGGEDIN_LISTENER,{
+  const sessionLoggedInListener = useSubscription(SESSION_LOGGEDIN_LISTENER, {
     onData: (data) => {
-      console.log("Subscription Data : " , data)
-    }
+      console.log("Subscription Data : ", data);
+    },
   });
   const navigate = useNavigate();
 
+  const [updateSessionInfo, updateSessionInfoResponse] =
+    useMutation(UPDATE_SESSION_INFO);
   useEffect(() => {
     if (sessionLoggedInListener?.data?.sessionLoggedIn) {
       console.log(
@@ -40,13 +51,28 @@ export default function Index() {
         sessionLoggedInListener?.data
       );
       if (
-        sessionLoggedInListener?.data?.sessionLoggedIn?.session_id == generatedSessionId &&
+        sessionLoggedInListener?.data?.sessionLoggedIn?.session_id ==
+          generatedSessionId &&
         sessionLoggedInListener?.data?.sessionLoggedIn?.device_id
       ) {
         toast.success("Connected Successfylly");
         navigate("/notification");
-        setSessionId(sessionLoggedInListener?.data?.sessionLoggedIn?.session_id);
+        setSessionId(
+          sessionLoggedInListener?.data?.sessionLoggedIn?.session_id
+        );
         setDeviceId(sessionLoggedInListener?.data?.sessionLoggedIn?.device_id);
+        (async () => {
+          await updateSessionInfo({
+            variables: {
+              input: {
+                device_id:
+                  sessionLoggedInListener?.data?.sessionLoggedIn?.device_id,
+                session_id:
+                  sessionLoggedInListener?.data?.sessionLoggedIn?.session_id,
+              },
+            },
+          });
+        })();
       } else {
         toast.error("Cannot connect, Please try again");
       }
