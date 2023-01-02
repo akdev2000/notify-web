@@ -77,8 +77,26 @@ export function NotificationList(props: Props) {
             style={{ width: 50, height: 50, marginRight: 15, backgroundColor:"black" }}
           /> */}
           <div>
-            <Typography variant="h6">{notificationdata?.title}</Typography>
-            <Typography variant="subtitle1" sx={{maxWidth:100,whiteSpace:"nowrap", textOverflow:"hidden"}} >
+            <Typography
+              variant="h6"
+              sx={{
+                width: 220,
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+              }}
+            >
+              {notificationdata?.title}
+            </Typography>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                width: 220,
+                whiteSpace: "nowrap",
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+              }}
+            >
               {notificationdata?.text}
             </Typography>
           </div>

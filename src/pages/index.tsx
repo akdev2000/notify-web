@@ -12,6 +12,8 @@ import {
   setSessionId,
 } from "../utils/helpers";
 import { toast } from "react-hot-toast";
+import Lottie from "react-lottie"
+import animationData from "../components/notificatiom_animation.json"
 
 const SESSION_LOGGEDIN_LISTENER = gql`
   subscription sessionLoggedIn {
@@ -87,6 +89,15 @@ export default function Index() {
     }
   }, []);
 
+  const defaultOptions = {
+    loop: true,
+    autoplay: true,
+    animationData: animationData,
+    rendererSettings: {
+      preserveAspectRatio: "xMidYMid slice",
+    },
+  };
+
   return (
     <Root>
       <div
@@ -96,6 +107,7 @@ export default function Index() {
           justifyContent: "center",
         }}
       >
+        <Lottie options={defaultOptions} height={400} width={400} />
         {/* <NotificationList title={"Test"} description={"Testing description"} /> */}
         <QRCode value={generatedSessionId} />
         {/* <button>test</button> */}
