@@ -22,12 +22,12 @@ const root = ReactDOM.createRoot(
 
 const wsLink = new GraphQLWsLink(
   createClient({
-    url: "ws://192.168.43.152:8000/graphql",
+    url: `${process.env.NEXT_PUBLIC_SOCKET_URL}/graphql`,
   })
 );
 
 const httpLink = new HttpLink({
-  uri: "http://192.168.43.152:8000/graphql",
+  uri: `${process.env.NEXT_PUBLIC_API_URL}/graphql`,
 });
 
 const errorLink: any = onError(
